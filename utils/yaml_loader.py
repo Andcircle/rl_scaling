@@ -25,9 +25,26 @@ def load_hypes(hypes_path):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
+        if 'environment' not in hypes:
+            environment_dir = os.path.join(base_dir, hypes['environment_file'])
+            with open(environment_dir, 'r') as rf:
+                environment_hypes = yaml.load(rf)
+            hypes['environment'] = environment_hypes
+
+        if 'agent' not in hypes:
+            agent_dir = os.path.join(base_dir, hypes['agent_file'])
+            with open(agent_dir, 'r') as rf:
+                agent_hypes = yaml.load(rf)
+            hypes['agent'] = agent_hypes
+
         hypes_save_path = output_dir + '/hypes'
         with open(hypes_save_path, 'w') as wf:
             yaml.dump(hypes, wf)
+
+        hypes['agent']['retrain'] = False
+
+    else:
+        hypes['agent']['retrain'] = True
 
     return hypes
 
