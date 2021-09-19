@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import logging
+import time
 
 from enviroments.environment import Environment
 from agent_algorithms.a2c import ActorCritic
@@ -27,7 +28,11 @@ def train(hypes, tf_writer):
         do_evaluate = n % hypes['agent']['train']['evaluate_epoch'] == 0
         do_save = n % hypes['agent']['train']['save_epoch'] == 0
 
+        logging.info('Epoch {} start'.format(n))
+        t1 = time.time()
         actions, values, observations, rewards, dones, states = sim.simulate(sim_step, do_evaluate)
+        t2 = time.time()
+        logging.info('Data preparation takes {} s'.format(t2-t1))
         avg_reward = np.mean(rewards)
 
         inds = np.arange(sim_step)
@@ -37,6 +42,7 @@ def train(hypes, tf_writer):
         vf_losses=[]
         entropies=[]
 
+        t3 = time.time()
         for m in range(step):
             batch_inds = inds[m * batch : m * batch + batch]
             batch_slice = (tf.constant(arr[batch_inds]) for arr in (observations, actions, rewards, values))
@@ -45,6 +51,8 @@ def train(hypes, tf_writer):
             pg_losses.append(pg_loss)
             vf_losses.append(vf_loss)
             entropies.append(entropy)
+        t4 = time.time()
+        logging.info('Training takes {} s'.format(t4-t3))
 
         pg_loss = np.mean(pg_losses)
         vf_loss = np.mean(vf_losses)
